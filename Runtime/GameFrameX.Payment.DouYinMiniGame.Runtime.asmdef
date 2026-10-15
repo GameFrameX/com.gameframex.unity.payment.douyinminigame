@@ -1,6 +1,6 @@
 {
-  "name": "GameFrameX.Payment.Minigame.Douyin.Runtime",
-  "rootNamespace": "GameFrameX.Payment.Minigame.Douyin.Runtime",
+  "name": "GameFrameX.Payment.DouYinMiniGame.Runtime",
+  "rootNamespace": "GameFrameX.Payment.DouYinMiniGame.Runtime",
   "references": [
     "GameFrameX.Runtime",
     "GameFrameX.Payment.Runtime",

@@ -22,7 +22,7 @@
 //   Gitee  仓库：https://gitee.com/GameFrameX
 //   Gitee Repository:  https://gitee.com/GameFrameX
 //   CNB  仓库：https://cnb.cool/GameFrameX
-//   CNB Repository:  https://cnb.cool/GameFrameX
+//   CNB Repository: https://cnb.cool/GameFrameX
 //   官方文档：https://gameframex.doc.alianblank.com/
 //   Official Documentation: https://gameframex.doc.alianblank.com/
 //  ==========================================================================================
@@ -30,23 +30,37 @@
 #if ENABLE_DOUYIN_MINI_GAME
 
 using GameFrameX.Payment.Runtime;
-using UnityEngine;
-using UnityEngine.Scripting;
 
-namespace GameFrameX.Payment.Minigame.Douyin.Runtime
+namespace GameFrameX.Payment.DouYinMiniGame.Runtime
 {
     /// <summary>
-    /// 抖音小游戏裁剪助手
+    /// 抖音小游戏购买参数
     /// </summary>
-    [RequireComponent(typeof(PaymentComponent))]
-    [Preserve]
-    public class GameFrameXPaymentMiniGameDouYinCroppingHelper : MonoBehaviour
+    public sealed class DouYinMiniGamePurchaseParams : PurchaseParams
     {
-        [Preserve]
-        void Start()
+        /// <summary>
+        /// 支付金额（单位：分）
+        /// </summary>
+        [UnityEngine.Scripting.Preserve]
+        public int Money { get; set; }
+
+        /// <summary>
+        /// 商品名称（上送时拼接为 商品ID_商品名称）
+        /// </summary>
+        [UnityEngine.Scripting.Preserve]
+        public string GoodName { get; set; }
+
+        /// <summary>
+        /// 自定义扩展数据
+        /// </summary>
+        [UnityEngine.Scripting.Preserve]
+        public string ExtraInfo { get; set; }
+
+        [UnityEngine.Scripting.Preserve]
+        public DouYinMiniGamePurchaseParams(string productId, string orderId, int money)
+            : base(productId, orderId, PaymentProductType.InApp)
         {
-            _ = typeof(MiniGameDouYinPaymentManager);
-            _ = typeof(DouyinPurchaseParams);
+            Money = money;
         }
     }
 }

@@ -22,7 +22,7 @@
 //   Gitee  仓库：https://gitee.com/GameFrameX
 //   Gitee Repository:  https://gitee.com/GameFrameX
 //   CNB  仓库：https://cnb.cool/GameFrameX
-//   CNB Repository:  https://cnb.cool/GameFrameX
+//   CNB Repository: https://cnb.cool/GameFrameX
 //   官方文档：https://gameframex.doc.alianblank.com/
 //   Official Documentation: https://gameframex.doc.alianblank.com/
 //  ==========================================================================================
@@ -34,16 +34,16 @@ using System.Collections.Generic;
 using GameFrameX.Payment.Runtime;
 using GameFrameX.Runtime;
 
-namespace GameFrameX.Payment.Minigame.Douyin.Runtime
+namespace GameFrameX.Payment.DouYinMiniGame.Runtime
 {
     /// <summary>
     /// 抖音支付管理器
     /// </summary>
     [UnityEngine.Scripting.Preserve]
-    public sealed class MiniGameDouYinPaymentManager : BasePaymentManager
+    public sealed class DouYinMiniGamePaymentManager : BasePaymentManager
     {
         [UnityEngine.Scripting.Preserve]
-        public MiniGameDouYinPaymentManager()
+        public DouYinMiniGamePaymentManager()
         {
         }
 
@@ -95,7 +95,7 @@ namespace GameFrameX.Payment.Minigame.Douyin.Runtime
         [Obsolete("请使用 Buy(PurchaseParams) 替代")]
         public override void BuyInApp(string productId, string orderId, string offerToken = "", string customData = "")
         {
-            throw new NotImplementedException("请使用 Buy(PurchaseParams) 传入 DouyinPurchaseParams 来购买");
+            throw new NotImplementedException("请使用 Buy(PurchaseParams) 传入 DouYinMiniGamePurchaseParams 来购买");
         }
 
         /// <summary>
@@ -115,35 +115,57 @@ namespace GameFrameX.Payment.Minigame.Douyin.Runtime
         [Obsolete("请使用 Buy(PurchaseParams) 替代")]
         public override void Buy(string productId, PaymentProductType productType, string orderId, string offerToken = "", string customData = "")
         {
-            throw new NotImplementedException("请使用 Buy(PurchaseParams) 传入 DouyinPurchaseParams 来购买");
+            throw new NotImplementedException("请使用 Buy(PurchaseParams) 传入 DouYinMiniGamePurchaseParams 来购买");
         }
 
         /// <summary>
         /// 购买（推荐使用）
         /// </summary>
-        /// <param name="purchaseParams">购买参数，必须使用 DouyinPurchaseParams</param>
+        /// <param name="purchaseParams">购买参数，必须使用 DouYinMiniGamePurchaseParams</param>
         [UnityEngine.Scripting.Preserve]
         public override void Buy(PurchaseParams purchaseParams)
         {
-            if (!(purchaseParams is DouyinPurchaseParams douyinParams))
+            if (!(purchaseParams is DouYinMiniGamePurchaseParams douyinParams))
             {
-                throw new ArgumentException("抖音支付请使用 DouyinPurchaseParams", nameof(purchaseParams));
+                throw new ArgumentException("抖音支付请使用 DouYinMiniGamePurchaseParams", nameof(purchaseParams));
             }
 
-            DoPayment(douyinParams.ProductId, douyinParams.OrderId, douyinParams.Money, douyinParams.GoodName ?? "", douyinParams.ExtraInfo ?? "");
+            DoPayment(douyinParams);
         }
 
-        private void DoPayment(string productId, string orderId, int money, string goodName, string extraInfo)
+        /// <summary>
+        /// 执行抖音支付：iOS 平台走抖音客服代币支付，其余平台（Android/开发者工具）走道具直购 requestGamePayment。
+        /// 商品名称按 商品ID_商品名称 拼接后上送。
+        /// </summary>
+        /// <param name="douyinParams">抖音购买参数</param>
+        private void DoPayment(DouYinMiniGamePurchaseParams douyinParams)
         {
+            var productId = douyinParams.ProductId;
+            var orderId = douyinParams.OrderId;
+            var money = douyinParams.Money;
+            var goodName = productId + "_" + (douyinParams.GoodName ?? "");
+            var extraInfo = douyinParams.ExtraInfo ?? "";
+
             Log.Debug($"Pay itemID: {productId}, money: {money}, orderId: {orderId}, goodName: {goodName}, extData: {extraInfo}");
 
-            if (goodName.Length > 10)
+            var platform = TTSDK.TT.GetSystemInfo().platform.ToLower();
+            if (platform == "ios" || platform.Contains("ios"))
             {
-                Log.Warning($"抖音支付 goodName 长度不能超过10个字符，当前长度为 {goodName.Length} ，将会执行截取前10个字符");
-                goodName = goodName.Substring(0, 10);
+                if (TTSDK.CanIUse.OpenAwemeCustomerServiceParams.GoodType)
+                {
+                    var jsonData = new TTSDK.UNBridgeLib.LitJson.JsonData();
+                    jsonData["orderAmount"] = money;
+                    jsonData["goodName"] = goodName;
+                    jsonData["extraInfo"] = extraInfo;
+                    jsonData["customId"] = orderId;
+                    jsonData["zoneId"] = "1";
+                    jsonData["goodType"] = 2;
+                    jsonData["currencyType"] = "DIAMOND";
+                    Log.Debug($"OpenAwemeCustomerService openAwemeCustomerServiceParam: {jsonData.ToJson()}");
+                    TTSDK.TT.OpenAwemeCustomerService(jsonData, null, null);
+                }
             }
-
-            if (TTSDK.TT.GetSystemInfo().platform.ToLower() == "android")
+            else
             {
                 var requestGamePaymentParam = new Dictionary<string, object>()
                 {
@@ -161,25 +183,6 @@ namespace GameFrameX.Payment.Minigame.Douyin.Runtime
 
                 Log.Debug($"RequestGamePayment requestGamePaymentParam: {Utility.Json.ToJson(requestGamePaymentParam)}");
                 TTSDK.TT.RequestGamePayment(requestGamePaymentParam);
-            }
-            else
-            {
-                if (!TTSDK.CanIUse.OpenAwemeCustomerServiceParams.GoodType)
-                {
-                    Log.Error("抖音支付不支持购买商品类型");
-                    return;
-                }
-
-                var jsonData = new TTSDK.UNBridgeLib.LitJson.JsonData();
-                jsonData["orderAmount"] = money;
-                jsonData["goodName"] = goodName;
-                jsonData["extraInfo"] = extraInfo;
-                jsonData["customId"] = orderId;
-                jsonData["zoneId"] = "1";
-                jsonData["goodType"] = 2;
-                jsonData["currencyType"] = "DIAMOND";
-                Log.Debug($"OpenAwemeCustomerService openAwemeCustomerServiceParam: {jsonData.ToJson()}");
-                TTSDK.TT.OpenAwemeCustomerService(jsonData, null, null);
             }
         }
 

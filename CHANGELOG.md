@@ -1,3 +1,21 @@
+# [2.0.0](https://github.com/gameframex/com.gameframex.unity.payment.douyinminigame/compare/1.0.2...2.0.0) (2026-10-15)
+
+
+### Build System
+
+* **package:** 包更名并升级依赖至 2.0.0 ([82c896f](https://github.com/gameframex/com.gameframex.unity.payment.douyinminigame/commit/82c896fe9a7725c00819ef54316cf33691b07ac0))
+
+
+### Features
+
+* **runtime:** 包与程序集更名并对齐抖音支付流程 ([5ab760b](https://github.com/gameframex/com.gameframex.unity.payment.douyinminigame/commit/5ab760b5d50050a21d1b3c9f5007c82aa4425d6b))
+
+
+### BREAKING CHANGES
+
+* **package:** UPM 包名变更，manifest.json 需改用新包名引用。
+* **runtime:** 程序集名、命名空间、管理器与参数类名全部变更，旧引用需按新名称迁移。
+
 ## [2.0.0](https://github.com/gameframex/com.gameframex.unity.payment.douyinminigame/compare/1.0.2...2.0.0) (2026-10-15)
 
 

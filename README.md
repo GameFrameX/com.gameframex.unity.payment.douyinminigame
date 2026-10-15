@@ -2,10 +2,10 @@
 
 <img src="https://download.alianblank.com/gameframex/gameframex_logo_320.png" alt="Game Frame X Logo" width="160" />
 
-# Game Frame X Payment MiniGame DouYin
+# Game Frame X Payment (DouYin Mini Game)
 
-[![License](https://img.shields.io/github/license/GameFrameX/com.gameframex.unity.payment.minigame.douyin)](https://github.com/GameFrameX/com.gameframex.unity.payment.minigame.douyin/blob/main/LICENSE.md)
-[![Version](https://img.shields.io/github/v/release/GameFrameX/com.gameframex.unity.payment.minigame.douyin)](https://github.com/GameFrameX/com.gameframex.unity.payment.minigame.douyin/releases)
+[![License](https://img.shields.io/github/license/GameFrameX/com.gameframex.unity.payment.douyinminigame)](https://github.com/GameFrameX/com.gameframex.unity.payment.douyinminigame/blob/main/LICENSE.md)
+[![Version](https://img.shields.io/github/v/release/GameFrameX/com.gameframex.unity.payment.douyinminigame)](https://github.com/GameFrameX/com.gameframex.unity.payment.douyinminigame/releases)
 [![Unity Version](https://img.shields.io/badge/Unity-2019.4-black?logo=unity)](https://unity.com/)
 [![Documentation](https://img.shields.io/badge/Documentation-docs-blue)](https://gameframex.doc.alianblank.com)
 
@@ -29,17 +29,18 @@ All-in-One Solution for Indie Game Development · Empowering Indie Developers' D
 
 ## Project Overview
 
-This package is the Douyin Mini Game payment adapter for GameFrameX.Payment. It implements a `BasePaymentManager` (`MiniGameDouYinPaymentManager`) for initiating in-game product payment requests through TTSDK in the Douyin Mini Game environment.
+This package is the Douyin Mini Game payment adapter for GameFrameX.Payment. It implements a `BasePaymentManager` (`DouYinMiniGamePaymentManager`) for initiating in-game product payment requests through TTSDK in the Douyin Mini Game environment.
 
 ## Supported Features
 
-- Payment initiation: One-time products (via the unified `Buy(...)` interface).
-- Android: Calls `TTSDK.TT.RequestGamePayment(...)`.
-- Non-Android: Calls `TTSDK.TT.OpenAwemeCustomerService(...)` (requires `CanIUse.OpenAwemeCustomerServiceParams.GoodType` to be true).
+- Payment initiation: One-time products (via the unified `Buy(PurchaseParams)` interface with `DouYinMiniGamePurchaseParams`).
+- iOS: Calls `TTSDK.TT.OpenAwemeCustomerService(...)` (DIAMOND currency, requires `CanIUse.OpenAwemeCustomerServiceParams.GoodType` to be true; otherwise does nothing).
+- Other platforms (Android / developer tools): Calls `TTSDK.TT.RequestGamePayment(...)`.
+- `goodName` is sent as `ProductId_GoodName`.
 
 ## Unsupported / Stub Implementations
 
-- `BuyInApp(...)`: Throws an exception (use `Buy(...)` instead).
+- `BuyInApp(...)`: Throws an exception (use `Buy(PurchaseParams)` instead).
 - `BuySubs(...)`: Throws an exception (Douyin payment does not support subscription products).
 - `QueryPurchases(...)` / `ConsumePurchase(...)`: Only outputs warning logs, no actual logic.
 - `SetPredefinedProductIds(...)`: Empty implementation.
@@ -64,7 +65,7 @@ Choose one of the following methods:
        }
      ],
      "dependencies": {
-       "com.gameframex.unity.payment.minigame.douyin": "1.0.0"
+       "com.gameframex.unity.payment.douyinminigame": "2.0.0"
      }
    }
    ```
@@ -74,21 +75,20 @@ Choose one of the following methods:
 2. Add to `manifest.json` dependencies:
    ```json
    {
-      "com.gameframex.unity.payment.minigame.douyin": "https://github.com/gameframex/com.gameframex.unity.payment.minigame.douyin.git"
+      "com.gameframex.unity.payment.douyinminigame": "https://github.com/gameframex/com.gameframex.unity.payment.douyinminigame.git"
    }
    ```
-3. Use **Package Manager** in Unity with **Git URL**: `https://github.com/gameframex/com.gameframex.unity.payment.minigame.douyin.git`
+3. Use **Package Manager** in Unity with **Git URL**: `https://github.com/gameframex/com.gameframex.unity.payment.douyinminigame.git`
 4. Clone the repository into your Unity project's `Packages` directory. It will be loaded automatically.
 ## Buy Parameter Mapping
 
-`MiniGameDouYinPaymentManager.Buy(productId, productType, orderId, offerToken, obfuscatedProfileId)` maps internally as follows:
+`DouYinMiniGamePaymentManager.Buy(purchaseParams)` requires a `DouYinMiniGamePurchaseParams` and maps its fields as follows:
 
-- `productId`: Used only for log output (`itemID`).
-- `productType`: Converted to `money` via `Convert.ToInt32(productType)` and passed directly as `orderAmount` (this package does not multiply by 100).
-- `orderId`: Passed to `customId`.
-- `offerToken`: Passed to `goodName`.
-- `offerToken` length limit: When `goodName` (i.e., `offerToken`) exceeds 10 characters, it is truncated to the first 10 characters with a warning log.
-- `obfuscatedProfileId`: Passed to `extraInfo`.
+- `ProductId`: Sent as the `ProductId` prefix of `goodName` (`ProductId_GoodName`).
+- `OrderId`: Passed to `customId`.
+- `Money`: Passed directly as `orderAmount` (unit: fen/cents; this package does not multiply by 100).
+- `GoodName`: Sent as the `GoodName` part of `goodName` (`ProductId_GoodName`, no length truncation).
+- `ExtraInfo`: Passed to `extraInfo`.
 
 ## Payment Result Handling
 
@@ -109,7 +109,8 @@ See [CHANGELOG.md](CHANGELOG.md) for details.
 
 | Package | Description |
 |---------|-------------|
-| `com.gameframex.unity` | 1.1.1 |
+| `com.gameframex.unity` | 3.0.0 |
+| `com.gameframex.unity.payment` | 2.0.0 |
 
 ## Documentation & Resources
 

@@ -2,10 +2,10 @@
 
 <img src="https://download.alianblank.com/gameframex/gameframex_logo_320.png" alt="Game Frame X Logo" width="160" />
 
-# Game Frame X Payment MiniGame DouYin
+# Game Frame X Payment (DouYin Mini Game)
 
-[![License](https://img.shields.io/github/license/GameFrameX/com.gameframex.unity.payment.minigame.douyin)](https://github.com/GameFrameX/com.gameframex.unity.payment.minigame.douyin/blob/main/LICENSE.md)
-[![Version](https://img.shields.io/github/v/release/GameFrameX/com.gameframex.unity.payment.minigame.douyin)](https://github.com/GameFrameX/com.gameframex.unity.payment.minigame.douyin/releases)
+[![License](https://img.shields.io/github/license/GameFrameX/com.gameframex.unity.payment.douyinminigame)](https://github.com/GameFrameX/com.gameframex.unity.payment.douyinminigame/blob/main/LICENSE.md)
+[![Version](https://img.shields.io/github/v/release/GameFrameX/com.gameframex.unity.payment.douyinminigame)](https://github.com/GameFrameX/com.gameframex.unity.payment.douyinminigame/releases)
 [![Unity Version](https://img.shields.io/badge/Unity-2019.4-black?logo=unity)](https://unity.com/)
 [![Documentation](https://img.shields.io/badge/Documentation-docs-blue)](https://gameframex.doc.alianblank.com)
 
@@ -29,17 +29,18 @@
 
 ## プロジェクト概要
 
-このパッケージは、GameFrameX.Payment の「抖音ミニゲーム決済」アダプターです。`BasePaymentManager`（`MiniGameDouYinPaymentManager`）を実装し、抖音ミニゲーム環境で TTSDK を通じてゲーム内商品の決済リクエストを発行します。
+このパッケージは、GameFrameX.Payment の「抖音ミニゲーム決済」アダプターです。`BasePaymentManager`（`DouYinMiniGamePaymentManager`）を実装し、抖音ミニゲーム環境で TTSDK を通じてゲーム内商品の決済リクエストを発行します。
 
 ## サポート範囲
 
-- 決済の開始：一回限り商品（統一された `Buy(...)` インターフェースを使用）。
-- Android：`TTSDK.TT.RequestGamePayment(...)` を呼び出し。
-- 非 Android：`TTSDK.TT.OpenAwemeCustomerService(...)` を呼び出し（`CanIUse.OpenAwemeCustomerServiceParams.GoodType` が true である必要があります）。
+- 決済の開始：一回限り商品（統一された `Buy(PurchaseParams)` インターフェースと `DouYinMiniGamePurchaseParams` を使用）。
+- iOS：`TTSDK.TT.OpenAwemeCustomerService(...)` を呼び出し（DIAMOND 通貨、`CanIUse.OpenAwemeCustomerServiceParams.GoodType` が true である必要があります。false の場合は決済を開始しません）。
+- その他のプラットフォーム（Android / 開発者ツール）：`TTSDK.TT.RequestGamePayment(...)` を呼び出し。
+- 商品名は `商品ID_商品名`（`ProductId_GoodName`）として連結して送信します。
 
 ## 未サポート / スタブ実装
 
-- `BuyInApp(...)`：例外をスロー（`Buy(...)` を使用してください）。
+- `BuyInApp(...)`：例外をスロー（`Buy(PurchaseParams)` を使用してください）。
 - `BuySubs(...)`：例外をスロー（抖音決済はサブスクリプション商品をサポートしていません）。
 - `QueryPurchases(...)` / `ConsumePurchase(...)`：警告ログのみ出力し、実際のロジックは実行しません。
 - `SetPredefinedProductIds(...)`：空の実装。
@@ -64,7 +65,7 @@
        }
      ],
      "dependencies": {
-       "com.gameframex.unity.payment.minigame.douyin": "1.0.0"
+       "com.gameframex.unity.payment.douyinminigame": "2.0.0"
      }
    }
    ```
@@ -74,21 +75,20 @@
 2. `manifest.json` の `dependencies` に直接追加：
    ```json
    {
-      "com.gameframex.unity.payment.minigame.douyin": "https://github.com/gameframex/com.gameframex.unity.payment.minigame.douyin.git"
+      "com.gameframex.unity.payment.douyinminigame": "https://github.com/gameframex/com.gameframex.unity.payment.douyinminigame.git"
    }
    ```
-3. Unity の **Package Manager** で **Git URL** を使用して追加：`https://github.com/gameframex/com.gameframex.unity.payment.minigame.douyin.git`
+3. Unity の **Package Manager** で **Git URL** を使用して追加：`https://github.com/gameframex/com.gameframex.unity.payment.douyinminigame.git`
 4. リポジトリを Unity プロジェクトの `Packages` ディレクトリにクローンしてください。自動的に読み込まれます。
 ## Buy パラメータマッピング
 
-`MiniGameDouYinPaymentManager.Buy(productId, productType, orderId, offerToken, obfuscatedProfileId)` の内部マッピングは以下の通りです：
+`DouYinMiniGamePaymentManager.Buy(purchaseParams)` は `DouYinMiniGamePurchaseParams` を要求し、フィールドは以下のようにマッピングされます：
 
-- `productId`：ログ出力にのみ使用（`itemID`）。
-- `productType`：`Convert.ToInt32(productType)` で `money` に変換され、そのまま `orderAmount` として渡されます（100倍の処理は行いません）。
-- `orderId`：`customId` に渡されます。
-- `offerToken`：`goodName` に渡されます。
-- `offerToken` の長さ制限：`goodName`（`offerToken`）が10文字を超える場合、最初の10文字に切り詰められ、警告ログが出力されます。
-- `obfuscatedProfileId`：`extraInfo` に渡されます。
+- `ProductId`：`goodName` の `商品ID_商品名`（`ProductId_GoodName`）プレフィックスとして送信されます。
+- `OrderId`：`customId` に渡されます。
+- `Money`：そのまま `orderAmount` として渡されます（単位：分；このパッケージは金額を100倍しません）。
+- `GoodName`：`goodName` の `商品ID_商品名`（`ProductId_GoodName`）後半として送信されます（長さの切り詰めは行いません）。
+- `ExtraInfo`：`extraInfo` に渡されます。
 
 ## 決済結果処理について
 
@@ -109,7 +109,8 @@
 
 | パッケージ | 説明 |
 |----------|------|
-| `com.gameframex.unity` | 1.1.1 |
+| `com.gameframex.unity` | 3.0.0 |
+| `com.gameframex.unity.payment` | 2.0.0 |
 
 ## ドキュメントとリソース
 

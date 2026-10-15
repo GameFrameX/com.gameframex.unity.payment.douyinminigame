@@ -1,3 +1,14 @@
+## [2.0.0](https://github.com/gameframex/com.gameframex.unity.payment.douyinminigame/compare/1.0.2...2.0.0) (2026-10-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* 包名由 `com.gameframex.unity.payment.minigame.douyin` 更名为 `com.gameframex.unity.payment.douyinminigame`（`minigame.douyin` 整合为一段，与 advertisement/setting 等 douyinminigame 包对齐）；程序集更名为 `GameFrameX.Payment.DouYinMiniGame.Runtime`，命名空间变更为 `GameFrameX.Payment.DouYinMiniGame.Runtime`，`MiniGameDouYinPaymentManager` 更名为 `DouYinMiniGamePaymentManager`，`DouyinPurchaseParams` 更名为 `DouYinMiniGamePurchaseParams`
+
+### Features
+
+* 支付流程对齐 Client_Android_DEV DummyLocalizationSdkInterface.Pay：改为 iOS 平台优先判断（platform 为 ios 或包含 ios 时走 `OpenAwemeCustomerService` DIAMOND 币种客服支付，CanIUse 不支持时静默不发起），其余平台（Android/开发者工具）走 `RequestGamePayment` 道具直购；商品名称按 `商品ID_商品名称` 拼接上送，移除 10 字符截断逻辑
+
 ## [1.0.2](https://github.com/gameframex/com.gameframex.unity.payment.minigame.douyin/compare/1.0.1...1.0.2) (2026-07-30)
 
 

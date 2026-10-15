@@ -2,10 +2,10 @@
 
 <img src="https://download.alianblank.com/gameframex/gameframex_logo_320.png" alt="Game Frame X Logo" width="160" />
 
-# Game Frame X Payment MiniGame DouYin
+# Game Frame X Payment (DouYin Mini Game)
 
-[![License](https://img.shields.io/github/license/GameFrameX/com.gameframex.unity.payment.minigame.douyin)](https://github.com/GameFrameX/com.gameframex.unity.payment.minigame.douyin/blob/main/LICENSE.md)
-[![Version](https://img.shields.io/github/v/release/GameFrameX/com.gameframex.unity.payment.minigame.douyin)](https://github.com/GameFrameX/com.gameframex.unity.payment.minigame.douyin/releases)
+[![License](https://img.shields.io/github/license/GameFrameX/com.gameframex.unity.payment.douyinminigame)](https://github.com/GameFrameX/com.gameframex.unity.payment.douyinminigame/blob/main/LICENSE.md)
+[![Version](https://img.shields.io/github/v/release/GameFrameX/com.gameframex.unity.payment.douyinminigame)](https://github.com/GameFrameX/com.gameframex.unity.payment.douyinminigame/releases)
 [![Unity Version](https://img.shields.io/badge/Unity-2019.4-black?logo=unity)](https://unity.com/)
 [![Documentation](https://img.shields.io/badge/Documentation-docs-blue)](https://gameframex.doc.alianblank.com)
 
@@ -29,17 +29,18 @@
 
 ## 項目簡介
 
-本套件為 GameFrameX.Payment 的「抖音小遊戲支付」適配器，實作了一個 `BasePaymentManager`（`MiniGameDouYinPaymentManager`），用於在抖音小遊戲環境下透過 TTSDK 發起遊戲內商品支付請求。
+本套件為 GameFrameX.Payment 的「抖音小遊戲支付」適配器，實作了一個 `BasePaymentManager`（`DouYinMiniGamePaymentManager`），用於在抖音小遊戲環境下透過 TTSDK 發起遊戲內商品支付請求。
 
 ## 支援範圍
 
-- 支付發起：一次性商品（透過統一的 `Buy(...)` 介面）。
-- Android：呼叫 `TTSDK.TT.RequestGamePayment(...)`。
-- 非 Android：呼叫 `TTSDK.TT.OpenAwemeCustomerService(...)`（需 `CanIUse.OpenAwemeCustomerServiceParams.GoodType` 為 true）。
+- 支付發起：一次性商品（透過統一的 `Buy(PurchaseParams)` 介面配合 `DouYinMiniGamePurchaseParams`）。
+- iOS：呼叫 `TTSDK.TT.OpenAwemeCustomerService(...)`（DIAMOND 幣種，需 `CanIUse.OpenAwemeCustomerServiceParams.GoodType` 為 true，否則不發起支付）。
+- 其餘平台（Android/開發者工具）：呼叫 `TTSDK.TT.RequestGamePayment(...)`。
+- 商品名稱按 `商品ID_商品名稱`（`ProductId_GoodName`）拼接上送。
 
 ## 不支援/空實作
 
-- `BuyInApp(...)`：拋出例外（請使用 `Buy(...)`）。
+- `BuyInApp(...)`：拋出例外（請使用 `Buy(PurchaseParams)`）。
 - `BuySubs(...)`：拋出例外（抖音支付不支援訂閱商品）。
 - `QueryPurchases(...)` / `ConsumePurchase(...)`：僅輸出警告日誌，不執行實際邏輯。
 - `SetPredefinedProductIds(...)`：空實作。
@@ -64,7 +65,7 @@
        }
      ],
      "dependencies": {
-       "com.gameframex.unity.payment.minigame.douyin": "1.0.0"
+       "com.gameframex.unity.payment.douyinminigame": "2.0.0"
      }
    }
    ```
@@ -74,21 +75,20 @@
 2. 直接在 `manifest.json` 的 `dependencies` 節點下添加以下內容：
    ```json
    {
-      "com.gameframex.unity.payment.minigame.douyin": "https://github.com/gameframex/com.gameframex.unity.payment.minigame.douyin.git"
+      "com.gameframex.unity.payment.douyinminigame": "https://github.com/gameframex/com.gameframex.unity.payment.douyinminigame.git"
    }
    ```
-3. 在 Unity 的 `Package Manager` 中使用 `Git URL` 的方式添加庫，地址為：`https://github.com/gameframex/com.gameframex.unity.payment.minigame.douyin.git`
+3. 在 Unity 的 `Package Manager` 中使用 `Git URL` 的方式添加庫，地址為：`https://github.com/gameframex/com.gameframex.unity.payment.douyinminigame.git`
 4. 直接下載倉庫放置到 Unity 專案的 `Packages` 目錄下，會自動載入識別。
 ## Buy 參數映射
 
-`MiniGameDouYinPaymentManager.Buy(productId, productType, orderId, offerToken, obfuscatedProfileId)` 內部映射如下：
+`DouYinMiniGamePaymentManager.Buy(purchaseParams)` 要求傳入 `DouYinMiniGamePurchaseParams`，欄位映射如下：
 
-- `productId`：僅用於日誌輸出（`itemID`）。
-- `productType`：會被 `Convert.ToInt32(productType)` 轉為 `money`，並直接作為 `orderAmount` 傳入（本套件不會對金額做 `* 100`）。
-- `orderId`：傳入 `customId`。
-- `offerToken`：傳入 `goodName`。
-- `offerToken` 長度限制：當 `goodName`（即 `offerToken`）長度超過 10 個字元時，會截斷為前 10 個字元並輸出警告日誌。
-- `obfuscatedProfileId`：傳入 `extraInfo`。
+- `ProductId`：作為 `goodName` 的 `商品ID_商品名稱`（`ProductId_GoodName`）前綴上送。
+- `OrderId`：傳入 `customId`。
+- `Money`：直接作為 `orderAmount` 傳入（單位：分；本套件不會對金額做 `* 100`）。
+- `GoodName`：作為 `goodName` 的 `商品ID_商品名稱`（`ProductId_GoodName`）後半段上送（不做長度截斷）。
+- `ExtraInfo`：傳入 `extraInfo`。
 
 ## 支付結果處理說明
 
@@ -109,7 +109,8 @@
 
 | 套件 | 說明 |
 |------|------|
-| `com.gameframex.unity` | 1.1.1 |
+| `com.gameframex.unity` | 3.0.0 |
+| `com.gameframex.unity.payment` | 2.0.0 |
 
 ## 文檔與資源
 

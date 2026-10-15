@@ -2,10 +2,10 @@
 
 <img src="https://download.alianblank.com/gameframex/gameframex_logo_320.png" alt="Game Frame X Logo" width="160" />
 
-# Game Frame X Payment MiniGame DouYin
+# Game Frame X Payment (DouYin Mini Game)
 
-[![License](https://img.shields.io/github/license/GameFrameX/com.gameframex.unity.payment.minigame.douyin)](https://github.com/GameFrameX/com.gameframex.unity.payment.minigame.douyin/blob/main/LICENSE.md)
-[![Version](https://img.shields.io/github/v/release/GameFrameX/com.gameframex.unity.payment.minigame.douyin)](https://github.com/GameFrameX/com.gameframex.unity.payment.minigame.douyin/releases)
+[![License](https://img.shields.io/github/license/GameFrameX/com.gameframex.unity.payment.douyinminigame)](https://github.com/GameFrameX/com.gameframex.unity.payment.douyinminigame/blob/main/LICENSE.md)
+[![Version](https://img.shields.io/github/v/release/GameFrameX/com.gameframex.unity.payment.douyinminigame)](https://github.com/GameFrameX/com.gameframex.unity.payment.douyinminigame/releases)
 [![Unity Version](https://img.shields.io/badge/Unity-2019.4-black?logo=unity)](https://unity.com/)
 [![Documentation](https://img.shields.io/badge/Documentation-docs-blue)](https://gameframex.doc.alianblank.com)
 
@@ -29,17 +29,18 @@
 
 ## 프로젝트 개요
 
-이 패키지는 GameFrameX.Payment의 '抖音 미니게임 결제' 어댑터입니다. `BasePaymentManager`(`MiniGameDouYinPaymentManager`)를 구현하여, 抖音 미니게임 환경에서 TTSDK를 통해 게임 내 상품 결제 요청을 시작합니다.
+이 패키지는 GameFrameX.Payment의 '抖音 미니게임 결제' 어댑터입니다. `BasePaymentManager`(`DouYinMiniGamePaymentManager`)를 구현하여, 抖音 미니게임 환경에서 TTSDK를 통해 게임 내 상품 결제 요청을 시작합니다.
 
 ## 지원 범위
 
-- 결제 시작: 일회성 상품 (통합된 `Buy(...)` 인터페이스 사용).
-- Android: `TTSDK.TT.RequestGamePayment(...)` 호출.
-- 비 Android: `TTSDK.TT.OpenAwemeCustomerService(...)` 호출 (`CanIUse.OpenAwemeCustomerServiceParams.GoodType`이 true여야 함).
+- 결제 시작: 일회성 상품 (통합된 `Buy(PurchaseParams)` 인터페이스와 `DouYinMiniGamePurchaseParams` 사용).
+- iOS: `TTSDK.TT.OpenAwemeCustomerService(...)` 호출 (DIAMOND 통화, `CanIUse.OpenAwemeCustomerServiceParams.GoodType`이 true여야 함; false이면 결제를 시작하지 않음).
+- 기타 플랫폼 (Android / 개발자 도구): `TTSDK.TT.RequestGamePayment(...)` 호출.
+- 상품명은 `상품ID_상품명`(`ProductId_GoodName`)으로 연결하여 전송합니다.
 
 ## 미지원 / 스텁 구현
 
-- `BuyInApp(...)`: 예외 발생 (`Buy(...)`를 사용하세요).
+- `BuyInApp(...)`: 예외 발생 (`Buy(PurchaseParams)`를 사용하세요).
 - `BuySubs(...)`: 예외 발생 (抖音 결제는 구독 상품을 지원하지 않음).
 - `QueryPurchases(...)` / `ConsumePurchase(...)`: 경고 로그만 출력, 실제 로직 없음.
 - `SetPredefinedProductIds(...)`: 빈 구현.
@@ -64,7 +65,7 @@
        }
      ],
      "dependencies": {
-       "com.gameframex.unity.payment.minigame.douyin": "1.0.0"
+       "com.gameframex.unity.payment.douyinminigame": "2.0.0"
      }
    }
    ```
@@ -74,21 +75,20 @@
 2. `manifest.json`의 `dependencies`에 직접 추가:
    ```json
    {
-      "com.gameframex.unity.payment.minigame.douyin": "https://github.com/gameframex/com.gameframex.unity.payment.minigame.douyin.git"
+      "com.gameframex.unity.payment.douyinminigame": "https://github.com/gameframex/com.gameframex.unity.payment.douyinminigame.git"
    }
    ```
-3. Unity의 **Package Manager**에서 **Git URL**을 사용하여 추가: `https://github.com/gameframex/com.gameframex.unity.payment.minigame.douyin.git`
+3. Unity의 **Package Manager**에서 **Git URL**을 사용하여 추가: `https://github.com/gameframex/com.gameframex.unity.payment.douyinminigame.git`
 4. 리포지토리를 Unity 프로젝트의 `Packages` 디렉토리에 클론하세요. 자동으로 로드됩니다.
 ## Buy 매개변수 매핑
 
-`MiniGameDouYinPaymentManager.Buy(productId, productType, orderId, offerToken, obfuscatedProfileId)` 내부 매핑:
+`DouYinMiniGamePaymentManager.Buy(purchaseParams)`는 `DouYinMiniGamePurchaseParams`를 요구하며, 필드는 다음과 같이 매핑됩니다:
 
-- `productId`: 로그 출력에만 사용 (`itemID`).
-- `productType`: `Convert.ToInt32(productType)`로 `money`로 변환되어 `orderAmount`로 직접 전달됩니다 (이 패키지는 금액에 * 100을 하지 않습니다).
-- `orderId`: `customId`로 전달됩니다.
-- `offerToken`: `goodName`으로 전달됩니다.
-- `offerToken` 길이 제한: `goodName`(즉, `offerToken`)이 10자를 초과하면 처음 10자로 잘리고 경고 로그가 출력됩니다.
-- `obfuscatedProfileId`: `extraInfo`로 전달됩니다.
+- `ProductId`: `goodName`의 `상품ID_상품명`(`ProductId_GoodName`) 접두사로 전송됩니다.
+- `OrderId`: `customId`로 전달됩니다.
+- `Money`: 그대로 `orderAmount`로 전달됩니다 (단위: 분; 이 패키지는 금액에 * 100을 하지 않습니다).
+- `GoodName`: `goodName`의 `상품ID_상품명`(`ProductId_GoodName`) 후반부로 전송됩니다 (길이 잘라내기 없음).
+- `ExtraInfo`: `extraInfo`로 전달됩니다.
 
 ## 결제 결과 처리
 
@@ -109,7 +109,8 @@
 
 | 패키지 | 설명 |
 |--------|------|
-| `com.gameframex.unity` | 1.1.1 |
+| `com.gameframex.unity` | 3.0.0 |
+| `com.gameframex.unity.payment` | 2.0.0 |
 
 ## 문서 및 자료
 
